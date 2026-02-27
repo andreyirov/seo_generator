@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from loguru import logger
 from typing import List
 from tenacity import retry, stop_after_attempt, wait_fixed, RetryError
+from openai_module import generate_headlines
 
 # Настройка логирования
 logger.add("agent.log", rotation="10 MB", level="INFO")
