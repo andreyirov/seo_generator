@@ -1,53 +1,79 @@
-# Генератор SEO-заголовков
+# Генератор SEO-заголовков (API)
 
-Агент, который на основе статьи по URL генерирует 5 цепляющих SEO-заголовков, используя OpenAI API.
+Сервис на FastAPI, который на основе статьи по URL генерирует 5 цепляющих SEO-заголовков, используя OpenAI API.
 
 ## Функциональность
 
-- Загружает HTML страницы по указанному URL.
-- Извлекает основной текст статьи.
-- Генерирует 5 вариантов SEO-заголовков с помощью LLM.
-- Логирует процесс работы и ошибки.
-- Автоматически повторяет попытки при сбоях сети или API.
+- **API**: REST API с эндпоинтом для генерации заголовков.
+- **Загрузка**: Извлекает основной текст статьи по URL.
+- **Генерация**: Создает 5 вариантов SEO-заголовков с помощью LLM.
+- **Логирование**: Поддержка BetterStack (Logtail) и локального логирования.
+- **Надежность**: Автоматические повторные попытки при сбоях.
 
 ## Требования
 
 - Python >= 3.10
-- Зависимости из `requirements.txt`
+- Docker (опционально)
 
-## Установка
+## Установка и запуск (Локально)
 
 1. Клонируйте репозиторий.
-2. Создайте виртуальное окружение:
+2. Создайте виртуальное окружение и установите зависимости:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # Linux/macOS
-   # venv\Scripts\activate  # Windows
-   ```
-3. Установите зависимости:
-   ```bash
+   source venv/bin/activate
    pip install -r requirements.txt
    ```
-4. Создайте файл `.env` в корне проекта и добавьте следующие переменные:
+3. Создайте файл `.env` в корне проекта:
    ```env
    PROXYAPIKEY=ваш_ключ_api
    MODEL=openai/gpt-4o
    OPENAPIURL=https://openai.api.proxyapi.ru/v1
+   BETTERSTACK_TOKEN=ваш_токен_betterstack (опционально)
+   ```
+4. Запустите сервер:
+   ```bash
+   uvicorn agent:app --host 0.0.0.0 --port 8000 --reload
    ```
 
-## Использование
+## Установка и запуск (Docker)
 
-Запустите скрипт `agent.py`:
+1. Соберите образ:
+   ```bash
+   docker build -t seo-generator .
+   ```
+2. Запустите контейнер (передав файл .env):
+   ```bash
+   docker run -d -p 8000:8000 --env-file .env --name seo-app seo-generator
+   ```
 
-```bash
-python agent.py
+## Использование API
+
+**Эндпоинт:** `POST /generate-headlines`
+
+**Запрос:**
+```json
+{
+  "url": "https://habr.com/ru/articles/788382/"
+}
 ```
 
-В файле `agent.py` можно изменить переменную `test_url` для проверки на другой статье.
+**Пример cURL:**
+```bash
+curl -X POST "http://localhost:8000/generate-headlines" \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://habr.com/ru/articles/788382/"}'
+```
 
-## Структура проекта
-
-- `agent.py`: Основной файл с логикой загрузки статьи и запуска генерации.
-- `openai_module.py`: Модуль для взаимодействия с OpenAI API.
-- `requirements.txt`: Список зависимостей.
-- `.env`: Файл конфигурации (не включен в репозиторий).
+**Ответ:**
+```json
+{
+  "status": 200,
+  "headlines": [
+    "Заголовок 1",
+    "Заголовок 2",
+    ...
+  ],
+  "message": "Headlines generated successfully"
+}
+```

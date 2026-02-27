@@ -1,4 +1,5 @@
 import requests
+import os
 from bs4 import BeautifulSoup
 from loguru import logger
 from typing import List
@@ -7,9 +8,23 @@ from openai_module import generate_headlines
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, HttpUrl
 import uvicorn
+from logtail import LogtailHandler
+from dotenv import load_dotenv
+
+# Загружаем переменные окружения
+load_dotenv()
 
 # Настройка логирования
 logger.add("agent.log", rotation="10 MB", level="INFO")
+
+# Настройка BetterStack (Logtail)
+betterstack_token = os.getenv("BETTERSTACK_TOKEN")
+if betterstack_token:
+    handler = LogtailHandler(source_token=betterstack_token)
+    logger.add(handler, level="INFO")
+    logger.info("BetterStack logging configured successfully")
+else:
+    logger.warning("BETTERSTACK_TOKEN not found in .env, remote logging disabled")
 
 app = FastAPI(
     title="SEO Headlines Generator API",
@@ -125,4 +140,6 @@ async def create_headlines(request: HeadlineRequest):
         )
 
 if __name__ == "__main__":
+    logger.info("Starting API server...")
+    # Используем reload=True для удобства разработки, но в продакшене лучше без него
     uvicorn.run(app, host="0.0.0.0", port=8000)
